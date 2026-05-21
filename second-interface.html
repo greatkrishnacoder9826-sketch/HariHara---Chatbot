@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HariHara-Paradox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0033 25%, #001a33 50%, #0a2a1a 75%, #000000 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .chatbot-title {
+            font-size: 80px;
+            font-weight: bold;
+            font-family: 'Bodoni MT Black', serif;
+            background: linear-gradient(90deg, #00CED1, #39FF14, #FFD700, #FF8C00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+            text-align: center;
+            margin-top: 60px;
+            margin-bottom: 10px;
+        }
+
+        .chatbot-subtitle {
+            text-align: center;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #00CED1, #39FF14);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        /* LEFT MIC - Voice to chatbox */
+        .mic-icon-left {
+            width: 45px;
+            height: 45px;
+            background-color: rgba(0, 206, 209, 0.08);
+            border: 2px solid rgba(0, 206, 209, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #00CED1;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px 0 rgba(0, 206, 209, 0.15), inset 0 2px 2px rgba(255,255,255,0.1);
+        }
+
+        .mic-icon-left:hover {
+            background-color: rgba(0, 206, 209, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 206, 209, 0.35);
+        }
+
+        .mic-icon-left.listening {
+            background-color: rgba(0, 206, 209, 0.4);
+            border-color: #00CED1;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .search-bar {
+            width: 550px;
+            height: 50px;
+            border: 2px solid rgba(57, 255, 20, 0.4);
+            border-radius: 25px;
+            padding: 0 20px;
+            font-size: 16px;
+            background-color: rgba(10, 10, 30, 0.3);
+            color: #39FF14;
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(30px);
+            box-shadow: 0 8px 32px 0 rgba(57, 255, 20, 0.08), inset 0 2px 2px rgba(255,255,255,0.1);
+        }
+
+        .search-bar::placeholder {
+            color: rgba(57, 255, 20, 0.4);
+        }
+
+        .search-bar:focus {
+            border-color: rgba(255, 215, 0, 0.6);
+            background-color: rgba(255, 215, 0, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(255, 215, 0, 0.25);
+        }
+
+        /* RIGHT MIC - Google voice search */
+        .mic-icon-right-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mic-icon-right {
+            width: 45px;
+            height: 45px;
+            background-color: rgba(255, 140, 0, 0.08);
+            border: 2px solid rgba(255, 140, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #FF8C00;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px 0 rgba(255, 140, 0, 0.15), inset 0 2px 2px rgba(255,255,255,0.1);
+        }
+
+        .mic-icon-right:hover {
+            background-color: rgba(255, 140, 0, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 8px 32px 0 rgba(255, 140, 0, 0.35);
+        }
+
+        .voice-text {
+            font-size: 12px;
+            color: #00ff59;
+            text-align: center;
+        }
+
+        /* ANSWER BOX */
+        .answer-box {
+            display: none;
+            width: 580px;
+            margin: 10px auto 20px auto;
+            padding: 20px 25px;
+            background: rgba(10, 10, 30, 0.6);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            border-radius: 15px;
+            color: #c8ffc8;
+            font-size: 15px;
+            line-height: 1.8;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(57, 255, 20, 0.08);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .answer-label {
+            font-size: 11px;
+            color: #39FF14;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .answer-text {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%   { content: ''; }
+            25%  { content: '.'; }
+            50%  { content: '..'; }
+            75%  { content: '...'; }
+            100% { content: ''; }
+        }
+
+        /* IMAGE UPLOAD */
+        .image-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        .image-upload-box {
+            width: 200px;
+            height: 200px;
+            background-color: rgba(10, 10, 30, 0.2);
+            border: 3px dashed rgba(57, 255, 20, 0.4);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(30px);
+            box-shadow: 0 8px 32px 0 rgba(57, 255, 20, 0.08);
+        }
+
+        .image-upload-box:hover {
+            background-color: rgba(255, 215, 0, 0.08);
+            border-color: rgba(255, 215, 0, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(255, 215, 0, 0.25);
+        }
+
+        .plus-sign {
+            font-size: 60px;
+            color: #39FF14;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .upload-label {
+            font-size: 12px;
+            color: #39FF14;
+            margin-top: 8px;
+            opacity: 0.7;
+        }
+
+        .image-upload-input {
+            display: none;
+        }
+
+        /* Image answer box */
+        .image-answer-box {
+            display: none;
+            width: 580px;
+            margin: 15px auto 0 auto;
+            padding: 20px 25px;
+            background: rgba(10, 10, 30, 0.6);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            border-radius: 15px;
+            color: #c8f8ff;
+            font-size: 15px;
+            line-height: 1.8;
+            backdrop-filter: blur(20px);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0, 206, 209, 0.2);
+        }
+
+        /* VOICE MODAL */
+        .voice-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-modal.active {
+            display: flex;
+        }
+
+        .voice-modal-content {
+            background: rgba(10, 10, 30, 0.95);
+            border: 1px solid rgba(0, 206, 209, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 206, 209, 0.15);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .voice-title {
+            background: linear-gradient(90deg, #00CED1, #39FF14);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 20px;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .animated-mic {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 5px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+
+        .mic-bar {
+            width: 8px;
+            background-color: #39FF14;
+            border-radius: 4px;
+            animation: flick 0.6s ease-in-out infinite;
+            box-shadow: 0 0 10px #39FF14;
+        }
+
+        .mic-bar:nth-child(1) { height: 20px; animation-delay: 0s; background: #00CED1; box-shadow: 0 0 10px #00CED1; }
+        .mic-bar:nth-child(2) { height: 40px; animation-delay: 0.1s; background: #FFD700; box-shadow: 0 0 10px #FFD700; }
+        .mic-bar:nth-child(3) { height: 65px; animation-delay: 0.2s; background: #FF8C00; box-shadow: 0 0 10px #FF8C00; }
+        .mic-bar:nth-child(4) { height: 40px; animation-delay: 0.3s; background: #FFD700; box-shadow: 0 0 10px #FFD700; }
+        .mic-bar:nth-child(5) { height: 25px; animation-delay: 0.4s; background: #00CED1; box-shadow: 0 0 10px #00CED1; }
+
+        @keyframes flick {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+
+        .listening-text {
+            background: linear-gradient(90deg, #00CED1, #39FF14, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 14px;
+            margin-bottom: 20px;
+            animation: blink 1.5s infinite;
+            font-weight: bold;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .close-voice-modal {
+            background: linear-gradient(90deg, #00CED1, #39FF14);
+            color: #000;
+            border: none;
+            padding: 10px 30px;
+            font-size: 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .close-voice-modal:hover {
+            background: linear-gradient(90deg, #FF8C00, #FFD700);
+            transform: scale(1.05);
+        }
+
+        /* Google search modal */
+        .google-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .google-modal.active {
+            display: flex;
+        }
+
+        .google-modal-content {
+            background: rgba(10, 10, 30, 0.95);
+            border: 1px solid rgba(255, 140, 0, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            width: 350px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .google-title {
+            background: linear-gradient(90deg, #FF8C00, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .google-status {
+            color: #FFD700;
+            font-size: 14px;
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+
+        .stop-google-btn {
+            background: linear-gradient(90deg, #FF8C00, #FFD700);
+            color: #000;
+            border: none;
+            padding: 10px 30px;
+            font-size: 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .stop-google-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chatbot-title">HariHara</div>
+    <div class="chatbot-subtitle">Made with Paradox_________________________________Powered -- Krishna_Great</div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <button class="mic-icon-left" id="leftMicBtn" title="Bolo aur chatbox mein type ho jayega">🎙️</button>
+        <input type="text" class="search-bar" id="searchBar" placeholder="Kuch bhi poocho... (Enter dabao)">
+        <div class="mic-icon-right-container">
+            <button class="mic-icon-right" id="voiceMicBtn" title="Google pe voice search">🎙️</button>
+            <span class="voice-text">Search by voice</span>
+        </div>
+    </div>
+
+    <!-- Answer Box -->
+    <div class="answer-box" id="answerBox">
+        <div class="answer-label">🤖 HariHara ka jawab</div>
+        <div class="answer-text" id="answerText"></div>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="image-upload-container">
+        <div class="image-upload-box" id="uploadBox">
+            <span class="plus-sign">+</span>
+            <span class="upload-label">Photo ya File Upload Karo</span>
+            <input type="file" class="image-upload-input" id="imageInput" accept="image/*,.pdf,.txt">
+        </div>
+    </div>
+
+    <!-- Image Answer Box -->
+    <div class="image-answer-box" id="imageAnswerBox">
+        <div class="answer-label">🖼️ Image ka description</div>
+        <img id="imagePreview" class="image-preview" src="" alt="Uploaded image">
+        <div class="answer-text" id="imageAnswerText"></div>
+    </div>
+
+    <!-- Left Mic Voice Modal -->
+    <div class="voice-modal" id="voiceModal">
+        <div class="voice-modal-content">
+            <h2 class="voice-title">Sun raha hu...</h2>
+            <div class="animated-mic">
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+            </div>
+            <p class="listening-text">Kuch bolo...</p>
+            <button class="close-voice-modal" id="closeVoiceBtn">Roko</button>
+        </div>
+    </div>
+
+    <!-- Google Voice Search Modal -->
+    <div class="google-modal" id="googleModal">
+        <div class="google-modal-content">
+            <h2 class="google-title">🔍 Google Voice Search</h2>
+            <div class="animated-mic">
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+                <div class="mic-bar"></div>
+            </div>
+            <p class="google-status" id="googleStatus">Bolo... Google pe search karunga</p>
+            <button class="stop-google-btn" id="stopGoogleBtn">Band Karo</button>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // APNI GEMINI API KEY YAHAN DAALO
+        // ========================================
+        const GEMINI_API_KEY = 'AIzaSyDFUPapQf6xCp5SlW1ZUHy8biWetZUTqvw';
+        // ========================================
+
+        const searchBar = document.getElementById('searchBar');
+        const answerBox = document.getElementById('answerBox');
+        const answerText = document.getElementById('answerText');
+        const leftMicBtn = document.getElementById('leftMicBtn');
+        const voiceMicBtn = document.getElementById('voiceMicBtn');
+        const voiceModal = document.getElementById('voiceModal');
+        const closeVoiceBtn = document.getElementById('closeVoiceBtn');
+        const googleModal = document.getElementById('googleModal');
+        const googleStatus = document.getElementById('googleStatus');
+        const stopGoogleBtn = document.getElementById('stopGoogleBtn');
+        const uploadBox = document.getElementById('uploadBox');
+        const imageInput = document.getElementById('imageInput');
+        const imageAnswerBox = document.getElementById('imageAnswerBox');
+        const imageAnswerText = document.getElementById('imageAnswerText');
+        const imagePreview = document.getElementById('imagePreview');
+
+        // ============================================
+        // FEATURE 1: Chatbox → Claude/Gemini Answer
+        // ============================================
+        searchBar.addEventListener('keydown', async function(e) {
+            if (e.key === 'Enter' && searchBar.value.trim() !== '') {
+                const question = searchBar.value.trim();
+                searchBar.value = '';
+
+                answerBox.style.display = 'block';
+                answerText.innerHTML = '<span class="loading-dots">Soch raha hu</span>';
+
+                try {
+                    const res = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [{ text: question }]
+                                }],
+                                generationConfig: {
+                                    temperature: 0.9,
+                                    maxOutputTokens: 1000
+                                }
+                            })
+                        }
+                    );
+
+                    const data = await res.json();
+
+                    if (data.candidates && data.candidates[0]) {
+                        answerText.textContent = data.candidates[0].content.parts[0].text;
+                    } else if (data.error) {
+                        answerText.textContent = '❌ Error: ' + data.error.message;
+                    } else {
+                        answerText.textContent = '❌ Kuch galat ho gaya. API key check karo.';
+                    }
+                } catch (err) {
+                    answerText.textContent = '❌ Network error. Internet check karo.';
+                }
+            }
+        });
+
+        // ============================================
+        // FEATURE 2: Left Mic → Voice to Chatbox
+        // ============================================
+        let leftRecognition = null;
+
+        leftMicBtn.addEventListener('click', function () {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Tumhara browser voice support nahi karta. Chrome use karo.');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            leftRecognition = new SpeechRecognition();
+            leftRecognition.lang = 'hi-IN'; // Hindi + English dono chalega
+            leftRecognition.interimResults = false;
+            leftRecognition.continuous = false;
+
+            voiceModal.classList.add('active');
+            leftMicBtn.classList.add('listening');
+
+            leftRecognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                searchBar.value = transcript;
+                voiceModal.classList.remove('active');
+                leftMicBtn.classList.remove('listening');
+                // Auto send
+                searchBar.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+            };
+
+            leftRecognition.onerror = function () {
+                voiceModal.classList.remove('active');
+                leftMicBtn.classList.remove('listening');
+                alert('Awaaz nahi suni. Dobara try karo.');
+            };
+
+            leftRecognition.onend = function () {
+                voiceModal.classList.remove('active');
+                leftMicBtn.classList.remove('listening');
+            };
+
+            leftRecognition.start();
+        });
+
+        closeVoiceBtn.addEventListener('click', function () {
+            if (leftRecognition) leftRecognition.stop();
+            voiceModal.classList.remove('active');
+            leftMicBtn.classList.remove('listening');
+        });
+
+        voiceModal.addEventListener('click', function (e) {
+            if (e.target === voiceModal) {
+                if (leftRecognition) leftRecognition.stop();
+                voiceModal.classList.remove('active');
+                leftMicBtn.classList.remove('listening');
+            }
+        });
+
+        // ============================================
+        // FEATURE 3: Right Mic → Google Voice Search
+        // ============================================
+        let googleRecognition = null;
+
+        voiceMicBtn.addEventListener('click', function () {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Tumhara browser voice support nahi karta. Chrome use karo.');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            googleRecognition = new SpeechRecognition();
+            googleRecognition.lang = 'hi-IN';
+            googleRecognition.interimResults = false;
+            googleRecognition.continuous = false;
+
+            googleModal.classList.add('active');
+            googleStatus.textContent = 'Bolo... Google pe search karunga 🎙️';
+
+            googleRecognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                googleStatus.textContent = 'Mila: "' + transcript + '" — Google pe bhej raha hu...';
+                setTimeout(() => {
+                    googleModal.classList.remove('active');
+                    window.open('https://www.google.com/search?q=' + encodeURIComponent(transcript), '_blank');
+                }, 800);
+            };
+
+            googleRecognition.onerror = function () {
+                googleModal.classList.remove('active');
+                alert('Awaaz nahi suni. Dobara try karo.');
+            };
+
+            googleRecognition.onend = function () {
+                // Keep modal open until result or error
+            };
+
+            googleRecognition.start();
+        });
+
+        stopGoogleBtn.addEventListener('click', function () {
+            if (googleRecognition) googleRecognition.stop();
+            googleModal.classList.remove('active');
+        });
+
+        // ============================================
+        // FEATURE 4: Image Upload → Gemini Describe
+        // ============================================
+        uploadBox.addEventListener('click', function () {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', async function (e) {
+            if (e.target.files.length === 0) return;
+            const file = e.target.files[0];
+
+            const reader = new FileReader();
+            reader.onload = async function (event) {
+                const base64Data = event.target.result.split(',')[1];
+                const mimeType = file.type || 'image/jpeg';
+
+                // Show preview
+                imagePreview.src = event.target.result;
+                imageAnswerBox.style.display = 'block';
+                imageAnswerText.innerHTML = '<span class="loading-dots">Image dekh raha hu</span>';
+
+                // Update upload box background
+                uploadBox.style.backgroundImage = 'url(' + event.target.result + ')';
+                uploadBox.style.backgroundSize = 'cover';
+                uploadBox.style.backgroundPosition = 'center';
+                uploadBox.querySelector('.plus-sign').style.display = 'none';
+                uploadBox.querySelector('.upload-label').style.display = 'none';
+
+                try {
+                    const res = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [
+                                        {
+                                            inline_data: {
+                                                mime_type: mimeType,
+                                                data: base64Data
+                                            }
+                                        },
+                                        {
+                                            text: "Is image mein kya hai? Hindi mein natural aur friendly tarike se describe karo. Detail mein batao — colors, objects, log, jagah sab kuch."
+                                        }
+                                    ]
+                                }],
+                                generationConfig: {
+                                    temperature: 0.8,
+                                    maxOutputTokens: 800
+                                }
+                            })
+                        }
+                    );
+
+                    const data = await res.json();
+
+                    if (data.candidates && data.candidates[0]) {
+                        imageAnswerText.textContent = data.candidates[0].content.parts[0].text;
+                    } else if (data.error) {
+                        imageAnswerText.textContent = '❌ Error: ' + data.error.message;
+                    } else {
+                        imageAnswerText.textContent = '❌ Image describe nahi ho payi.';
+                    }
+                } catch (err) {
+                    imageAnswerText.textContent = '❌ Network error. Internet check karo.';
+                }
+            };
+
+            reader.readAsDataURL(file);
+        });
+    </script>
+
+</body>
+</html>
